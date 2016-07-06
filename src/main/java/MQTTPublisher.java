@@ -11,8 +11,11 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import io.vertx.redis.RedisClient;
-import io.vertx.redis.RedisOptions;
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
+import org.eclipse.paho.client.mqttv3.MqttClient;
+import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
+import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.InputStream;
 import java.util.logging.LogManager;
@@ -20,7 +23,7 @@ import java.util.logging.LogManager;
 /**
  * Created by akshay.kumar1 on 06/07/16.
  */
-public class Redis extends AbstractVerticle {
+public class MQTTPublisher extends AbstractVerticle {
 
     private HttpServer server = null;
     private Logger logger;
@@ -39,33 +42,11 @@ public class Redis extends AbstractVerticle {
         //Initialize the logger
         initLogger();
 
-        // Create the redis client
-        final RedisClient redisClient = RedisClient.create(vertx, new RedisOptions().setHost(config().getString("redis_host")));
 
         logger.info("Vertx Started");
 
-        // This is a GET API. Call this API "/getRedis?key=abc"
-        Route getRoute = router.route(HttpMethod.GET, config().getString("get_redis_url"));
-        getRoute.handler(routingContext -> {
-            HttpServerRequest request = routingContext.request();
-            String key = request.params().get("key");
-
-            redisClient.get(key, res -> {
-                if(res.succeeded()) {
-                    logger.info("Redis value = "+res.result());
-                    request.response().end(createResponse(res.result()));
-                    return;
-                } else {
-                    logger.error("Redis get failed");
-                    request.response().end(createResponse("FAILURE"));
-                }
-            });
-            logger.info("Done with GET Redis");
-        });
-
-
-        // This is a POST API. Call this API "/postRedis"
-        Route postRoute = router.route(HttpMethod.POST, config().getString("post_redis_url"));
+        // This is a POST API. Call this API "/publish?topic=abc"
+        Route postRoute = router.route(HttpMethod.POST, config().getString("publish_url"));
         postRoute.handler(routingContext -> {
             HttpServerRequest request = routingContext.request();
             final Buffer body = Buffer.buffer();
@@ -80,20 +61,28 @@ public class Redis extends AbstractVerticle {
                 public void handle() {
                     String requestBody = body.getString(0, body.length(), "UTF-8");
                     JsonObject jsonRequest = new JsonObject(requestBody);
-                    String key = jsonRequest.getString("key");
-                    String value = jsonRequest.getString("value");
-                    long ttl = jsonRequest.getLong("ttl");
+                    String inputMessage = jsonRequest.getString("message");
+                    String topic = jsonRequest.getString("topic");
+                    MemoryPersistence persistence = new MemoryPersistence();
 
-                    redisClient.setex(key, ttl, value, res -> {
-                        if(res.succeeded()) {
-                            request.response().end(createResponse("SUCCESS"));
-                        } else {
-                            request.response().end(createResponse("FAILURE"));
-                        }
-                    });
-                    logger.info("Done with POST Redis");
+                    try {
+                        MqttClient client = new MqttClient(config().getString("mqtt_broker"), config().getString("mqtt_clientId"), persistence);
+                        client.connect();
+                        MqttMessage message = new MqttMessage();
+                        message.setPayload(inputMessage.getBytes());
+                        client.publish(topic, message);
+                        request.response().end(createResponse("SUCCESS"));
+                    } catch(MqttException e) {
+                        System.out.println("reason "+e.getReasonCode());
+                        System.out.println("msg "+e.getMessage());
+                        System.out.println("loc "+e.getLocalizedMessage());
+                        System.out.println("cause "+e.getCause());
+                        System.out.println("excep "+e);
+                        e.printStackTrace();
+                    }
                 }
             });
+            logger.info("Done with Publish");
         });
 
         server.requestHandler(router::accept).listen(config().getInteger("server_port"));

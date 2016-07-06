@@ -5,7 +5,11 @@
   "post_url": "/postUrl",
   "post_redis_url": "/postRedis",
   "get_redis_url": "/getRedis",
+  "subscribe_url": "/subscribe",
+  "publish_url": "/publish",
 
+  "mqtt_broker": "tcp://127.0.0.1:1883",
+  "mqtt_clientId": "myClient",
   "redis_host": "127.0.0.1"
 }
 
