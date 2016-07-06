@@ -41,6 +41,7 @@
                                     <manifestEntries>
                                         <Main-Class>io.vertx.core.Starter</Main-Class>
                                         <Main-Verticle>WebServer</Main-Verticle>
+                                        <Main-Verticle>Redis</Main-Verticle>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>

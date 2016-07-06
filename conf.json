@@ -2,6 +2,10 @@
   "server_port": 8080,
 
   "get_url": "/getUrl",
-  "post_url": "/postUrl"
+  "post_url": "/postUrl",
+  "post_redis_url": "/postRedis",
+  "get_redis_url": "/getRedis",
+
+  "redis_host": "127.0.0.1"
 }
 
