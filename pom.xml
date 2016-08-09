@@ -45,6 +45,7 @@
                                         <Main-Verticle>MQTTSubscriber</Main-Verticle>
                                         <Main-Verticle>MQTTPublisher</Main-Verticle>
                                         <Main-Verticle>JDBC</Main-Verticle>
+                                        <Main-Verticle>RxScheduler</Main-Verticle>
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -93,6 +94,12 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
             <version>5.1.38</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-rx-java</artifactId>
+            <version>${vertx.version}</version>
         </dependency>
 
     </dependencies>

@@ -11,14 +11,17 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import rx.Observable;
+import rx.Scheduler;
 
 import java.io.InputStream;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
 /**
  * Created by akshay.kumar1 on 06/07/16.
  */
-public class WebServer extends AbstractVerticle{
+public class WebServer extends AbstractVerticle {
 
     private HttpServer server = null;
     private Logger logger;
