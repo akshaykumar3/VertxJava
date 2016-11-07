@@ -11,14 +11,21 @@
     <name>VertxJava</name>
 
     <properties>
-        <vertx.version>3.3.2</vertx.version>
+        <vertx.version>3.3.3</vertx.version>
         <newrelic.version>3.26.0</newrelic.version>
+        <bckfnn-ftp-client.version>0.0.2</bckfnn-ftp-client.version>
     </properties>
 
     <repositories>
         <repository>
             <id>staging</id>
             <url>https://oss.sonatype.org/content/repositories/iovertx-2993</url>
+        </repository>
+
+        <repository>
+            <id>bintray-bckfnn-maven</id>
+            <name>bckfnn-maven</name>
+            <url>http://jcenter.bintray.com/</url>
         </repository>
     </repositories>
 
@@ -48,11 +55,12 @@
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
                                     <manifestEntries>
                                         <Main-Class>io.vertx.core.Starter</Main-Class>
-                                        <!--<Main-Verticle>WebServer</Main-Verticle>-->
+                                        <Main-Verticle>WebServer</Main-Verticle>
                                         <!--<Main-Verticle>Redis</Main-Verticle>-->
-                                        <Main-Verticle>UI</Main-Verticle>
+                                        <!--<Main-Verticle>FTP</Main-Verticle>-->
                                         <!--<Main-Verticle>JDBC</Main-Verticle>-->
                                         <!--<Main-Verticle>RxScheduler</Main-Verticle>-->
+                                        <!--<Main-Verticle>ApiCall</Main-Verticle>-->
                                     </manifestEntries>
                                 </transformer>
                             </transformers>
@@ -110,46 +118,25 @@
         </dependency>
 
         <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-handlebars</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-jade</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-mvel</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-thymeleaf</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-freemarker</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>io.vertx</groupId>
-            <artifactId>vertx-web-templ-pebble</artifactId>
-            <version>${vertx.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>com.newrelic.agent.java</groupId>
             <artifactId>newrelic-api</artifactId>
             <version>${newrelic.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>io.github.bckfnn</groupId>
+            <artifactId>vertx-ftp-client</artifactId>
+            <version>${bckfnn-ftp-client.version}</version>
+            <type>pom</type>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/commons-net/commons-net -->
+        <dependency>
+            <groupId>commons-net</groupId>
+            <artifactId>commons-net</artifactId>
+            <version>3.3</version>
+        </dependency>
+
 
     </dependencies>
 

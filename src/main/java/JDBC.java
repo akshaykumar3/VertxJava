@@ -25,6 +25,9 @@ public class JDBC extends AbstractVerticle {
 
     private HttpServer server = null;
     private Logger logger;
+    private static JDBCClient jdbcClient;
+
+    private static final String DB_INSERT = "INSERT INTO `CouponCode` (`code`, `imei`, `merchantId`, `notificationId`, `applied`) VALUES ('84001601', '1234567890123458', %d, 16, 0);";
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -40,8 +43,8 @@ public class JDBC extends AbstractVerticle {
         //Initialize the logger
         initLogger();
 
-        final JDBCClient jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
-                .put("url", "jdbc:mysql://127.0.0.1/MyDB?autoReconnect=true&failOverReadOnly=false&maxReconnects=10&useUnicode=true&characterEncoding=UTF-8")
+        jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
+                .put("url", "jdbc:mysql://127.0.0.1/EventNotifier?autoReconnect=true&failOverReadOnly=false&maxReconnects=10&useUnicode=true&characterEncoding=UTF-8")
                 .put("user", "root")
                 .put("password", "")
                 .put("driver_class", "com.mysql.jdbc.Driver")
@@ -121,8 +124,8 @@ public class JDBC extends AbstractVerticle {
                         text = "Empty Input";
                     }
 
-                    String insertQuery = String.format("INSERT INTO `VertxTest` (`text`) VALUES (\"%s\");", text);
-                    logger.info("Mysql statement = " + insertQuery);
+                    String insertQuery = "INSERT INTO `Merchants` (`emailId`, `password`, `approved`) VALUES ('akshay0007k@gmail.com', '1234', 1);";
+                    logger.info("1 Mysql statement = " + insertQuery);
 
                     jdbcClient.getConnection( conn -> {
                         if(conn.failed()) {
@@ -133,22 +136,61 @@ public class JDBC extends AbstractVerticle {
 
                         SQLConnection connection = conn.result();
 
-                        connection.execute(insertQuery, insert -> {
-                            if(insert.failed()) {
-                                logger.error("MySql Insert failed");
-                                request.response().end(createResponse("FAILURE"));
-                                return;
-                            }
+                        connection.setAutoCommit(false, res -> {
 
-                            request.response().end(createResponse("SUCCESS"));
-
-                            // Close the connection
-                            connection.close(done -> {
-                                if (done.failed()) {
-                                    throw new RuntimeException(done.cause());
+                            connection.update(insertQuery, insert -> {
+                                if(insert.failed()) {
+                                    logger.error("1 MySql Insert failed");
+                                    request.response().end(createResponse("FAILURE"));
+                                    return;
                                 }
+
+                                JsonObject response = insert.result().toJson();
+                                logger.info("1 Response = "+response);
+                                int key = response.getJsonArray("keys").getInteger(0);
+
+                                // Album
+                                String query = String.format(DB_INSERT, key);
+                                logger.info("2 Mysql statement = " + query);
+
+                                connection.update(query, resp -> {
+                                    if (resp.failed()) {
+                                        logger.error("2 MySql Insert failed");
+                                        logger.error("2 cause = "+resp.cause());
+                                        request.response().end(createResponse("FAILURE"));
+                                        return;
+                                    }
+
+                                    logger.info("2 response = "+resp.result().toJson());
+
+
+                                    // Artist
+
+
+
+                                    connection.commit(outcome -> {
+                                        if (outcome.succeeded()) {
+                                            logger.info("SUCCESS");
+                                            request.response().end(createResponse("SUCCESS"));
+                                        } else {
+                                            logger.error("3 MySql Insert failed");
+                                            logger.error("3 cause = "+outcome.cause());
+                                            request.response().end(createResponse("FAILURE"));
+                                        }
+                                    });
+                                });
+
+
+                                // Artist
+
+
+                                // Close the connection
+//                                conne2
                             });
                         });
+
+
+
                     });
 
                     logger.info("Done with POST");
@@ -178,10 +220,10 @@ public class JDBC extends AbstractVerticle {
 
     private void initLogger(){
         try {
-            final InputStream inputStream = WebServer.class.getResourceAsStream("/logging.properties");
+            final InputStream inputStream = JDBC.class.getResourceAsStream("/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
-            logger = (Logger) LoggerFactory.getLogger(WebServer.class.getName());
-            logger.info("Logger initialized");
+            logger = (Logger) LoggerFactory.getLogger(JDBC.class.getName());
+            logger.info("LogFactory initialized");
         } catch(Exception ex) {
 
         }

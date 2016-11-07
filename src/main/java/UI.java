@@ -33,17 +33,30 @@ public class UI extends AbstractVerticle {
         router.route().handler(BodyHandler.create());
 
         router.route("/").handler(routingContext -> {
-            routingContext.response().putHeader("content-type", "text/html").end(
-                    "<form action=\"/form\" method=\"post\">\n" +
-                            "    <div>\n" +
-                            "        <label for=\"name\">Enter your name:</label>\n" +
-                            "        <input type=\"text\" id=\"name\" name=\"name\" />\n" +
-                            "    </div>\n" +
-                            "    <div class=\"button\">\n" +
-                            "        <button type=\"submit\">Send</button>\n" +
-                            "    </div>" +
-                            "</form>"
-            );
+            routingContext.response().putHeader("content-type", "text/html").end("<html>\n" +
+                    "<head>\n" +
+                    "<title>Merchant Login Form </title>\n" +
+                    "<!-- Include CSS File Here -->\n" +
+                    "<link rel=\"stylesheet\" href=\"style.css\"/>\n" +
+                    "<script src=\"http://ajax.aspnetcdn.com/ajax/jquery/jquery-1.9.0.js\"></script>\n" +
+                    "<!-- Include JS File Here -->\n" +
+                    "<script src=\"login.js\"></script>\n" +
+                    "</head>\n" +
+                    "<body>\n" +
+                    "<div class=\"container\">\n" +
+                    "<div class=\"main\">\n" +
+                    "<h2>Merchant Login Form </h2>\n" +
+                    "<form id=\"form_id\" method=\"post\" name=\"myform\">\n" +
+                    "<label>User Name :</label>\n" +
+                    "<input type=\"text\" name=\"username\" id=\"username\"/>\n" +
+                    "<label>Password :</label>\n" +
+                    "<input type=\"password\" name=\"password\" id=\"password\"/>\n" +
+                    "<input type=\"button\" id=\"loginButton\" value=\"Login\" onclick=\"validate();\" />\n" +
+                    "</form>\n" +
+                    "</div>\n" +
+                    "</div>\n" +
+                    "</body>\n" +
+                    "</html>");
         });
 
         // handle the form
@@ -73,7 +86,7 @@ public class UI extends AbstractVerticle {
             final InputStream inputStream = UI.class.getResourceAsStream("/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
             logger = (Logger) LoggerFactory.getLogger(UI.class.getName());
-            logger.info("Logger initialized");
+            logger.info("LogFactory initialized");
         } catch(Exception ex) {
 
         }

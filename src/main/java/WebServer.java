@@ -1,7 +1,4 @@
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
-import io.vertx.core.Handler;
-import io.vertx.core.VoidHandler;
+import io.vertx.core.*;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
@@ -11,11 +8,8 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
-import rx.Observable;
-import rx.Scheduler;
 
 import java.io.InputStream;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.LogManager;
 
 /**
@@ -42,6 +36,9 @@ public class WebServer extends AbstractVerticle {
 
         logger.info("Vertx Started");
 
+        int poolSize = 5;
+        WorkerExecutor workerExecutor = vertx.createSharedWorkerExecutor("my-worker-pool", poolSize);
+
         // This is a GET API. Call this API "/getUrl?input=Hello"
         Route getRoute = router.route(HttpMethod.GET, config().getString("get_url"));
         getRoute.handler(routingContext -> {
@@ -52,7 +49,25 @@ public class WebServer extends AbstractVerticle {
             if(isNullOrEmpty(input)) {
                 input = "Empty Input";
             }
-            request.response().end(createResponse(input));
+
+            workerExecutor.executeBlocking(future -> {
+                try {
+                    for (int j = 0; j < 1000; j++) {
+                        Thread.sleep(10*1000);
+                    }
+                } catch (InterruptedException e) {
+
+                }
+            }, res -> {
+                if (res.failed()) {
+                    logger.info("Fabric injestion failed");
+                    request.response().end(createResponse("SUCCESS"));
+                } else {
+                    logger.info("Fabric injestion successful");
+                    request.response().end(createResponse("FAILURE"));
+                }
+            });
+
             logger.info("Done with GET");
         });
 
@@ -95,9 +110,9 @@ public class WebServer extends AbstractVerticle {
         super.stop(stopFuture);
     }
 
-    private String createResponse(String input) {
+    private String createResponse(String status) {
         JsonObject json = new JsonObject();
-        json.put("response", input);
+        json.put("status", status);
         return (json.toString());
     }
 
@@ -110,7 +125,7 @@ public class WebServer extends AbstractVerticle {
             final InputStream inputStream = WebServer.class.getResourceAsStream("/logging.properties");
             LogManager.getLogManager().readConfiguration(inputStream);
             logger = (Logger) LoggerFactory.getLogger(WebServer.class.getName());
-            logger.info("Logger initialized");
+            logger.info("LogFactory initialized");
         } catch(Exception ex) {
 
         }
