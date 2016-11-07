@@ -58,6 +58,7 @@
                                         <Main-Verticle>WebServer</Main-Verticle>
                                         <!--<Main-Verticle>Redis</Main-Verticle>-->
                                         <!--<Main-Verticle>FTP</Main-Verticle>-->
+                                        <!--<Main-Verticle>UI</Main-Verticle>-->
                                         <!--<Main-Verticle>JDBC</Main-Verticle>-->
                                         <!--<Main-Verticle>RxScheduler</Main-Verticle>-->
                                         <!--<Main-Verticle>ApiCall</Main-Verticle>-->
