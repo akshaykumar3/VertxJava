@@ -1,4 +1,5 @@
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.VoidHandler;
@@ -14,6 +15,7 @@ import io.vertx.ext.jdbc.JDBCClient;
 import io.vertx.ext.sql.SQLConnection;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import utils.MysqlHelper;
 
 import java.io.InputStream;
 import java.util.logging.LogManager;
@@ -44,7 +46,7 @@ public class JDBC extends AbstractVerticle {
         initLogger();
 
         jdbcClient = JDBCClient.createShared(vertx, new JsonObject()
-                .put("url", "jdbc:mysql://127.0.0.1/EventNotifier?autoReconnect=true&failOverReadOnly=false&maxReconnects=10&useUnicode=true&characterEncoding=UTF-8")
+                .put("url", "jdbc:mysql://127.0.0.1/catalog_server?autoReconnect=true&failOverReadOnly=false&maxReconnects=10&useUnicode=true&characterEncoding=UTF-8")
                 .put("user", "root")
                 .put("password", "")
                 .put("driver_class", "com.mysql.jdbc.Driver")
@@ -52,7 +54,31 @@ public class JDBC extends AbstractVerticle {
 
 
         logger.info("Vertx Started");
-
+        
+        Route mysqlRoute = router.route(HttpMethod.GET, "/mysql");
+        mysqlRoute.handler(routingContext -> {
+        	HttpServerRequest request = routingContext.request();
+        	String query1 = "select name from contents where id = 8";
+        	String query2 = "select name from contents where id = 9";
+        	Future<JsonObject> mySqlFuture1 = MysqlHelper.mysqlGet(jdbcClient, query1);
+        	Future<JsonObject> mySqlFuture2 = MysqlHelper.mysqlGet(jdbcClient, query2);
+        	
+        	CompositeFuture.all(mySqlFuture1, mySqlFuture2).setHandler(res -> {
+        		if (res.failed()) {
+        			request.response().end(createResponse("FAILURE"));
+                    return;
+				}
+        		
+        		CompositeFuture future = res.result();
+        		JsonObject result1 = future.resultAt(0);
+        		JsonObject result2 = future.resultAt(0);
+        		logger.info("result1 = "+result1.toString());
+        		logger.info("result2 = "+result2.toString());
+        		request.response().end(createResponse("SUCCESS"));
+        	});
+        	logger.info("Done");
+        });
+        
         // This is a GET API. Call this API "/getMysql?id=1"
         Route getRoute = router.route(HttpMethod.GET, config().getString("get_mysql"));
         getRoute.handler(routingContext -> {
