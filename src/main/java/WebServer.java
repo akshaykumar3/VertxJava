@@ -34,10 +34,15 @@ public class WebServer extends AbstractVerticle {
         //Initialize the logger
         initLogger();
 
-        logger.info("Vertx Started");
-
         int poolSize = 5;
         WorkerExecutor workerExecutor = vertx.createSharedWorkerExecutor("my-worker-pool", poolSize);
+
+
+        vertx.setPeriodic(1000, timer -> {
+            JsonObject json = new JsonObject().put("status", "SUCCESS");
+            logger.info("Publishing json = "+json.toString());
+            vertx.eventBus().publish("test-topic", json);
+        });
 
         // This is a GET API. Call this API "/getUrl?input=Hello"
         Route getRoute = router.route(HttpMethod.GET, config().getString("get_url"));
@@ -100,6 +105,7 @@ public class WebServer extends AbstractVerticle {
             });
         });
 
+        logger.info("Starting Server");
         server.requestHandler(router::accept).listen(config().getInteger("server_port"));
 
     }
