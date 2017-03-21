@@ -27,7 +27,7 @@ public class JDBC extends AbstractVerticle {
 
     private HttpServer server = null;
     private Logger logger;
-    private static JDBCClient jdbcClient;
+    public static JDBCClient jdbcClient;
 
     private static final String DB_INSERT = "INSERT INTO `CouponCode` (`code`, `imei`, `merchantId`, `notificationId`, `applied`) VALUES ('84001601', '1234567890123458', %d, 16, 0);";
 
@@ -97,6 +97,7 @@ public class JDBC extends AbstractVerticle {
                     request.response().end(createResponse("FAILURE"));
                     return;
                 }
+
 
                 SQLConnection connection = conn.result();
 

@@ -45,4 +45,42 @@ public final class MysqlHelper {
 		});
 		return mysqlFuture;
 	}
+
+	public static void createMysqlEntry(String query, JsonArray params, JDBCClient jdbcClient, Future<Void> future) {
+
+		jdbcClient.getConnection(conn -> {
+			if (conn.failed()) {
+				logger.error("MySql connection failed");
+				future.fail("MySql connection failed for query = "+query);
+			}
+
+			SQLConnection connection = conn.result();
+
+			connection.updateWithParams(query, params, res -> {
+
+			});
+
+			connection.query(query, res -> {
+				if(res.failed()) {
+					logger.error("MySql query failed");
+					future.fail("MySql query failed for query = "+query);
+				}
+
+				JsonObject response = res.result().toJson();
+				logger.info("response = "+response.toString());
+				JsonArray responseArray = response.getJsonArray("rows");
+				JsonObject ans = responseArray.getJsonObject(0);
+
+				// Close the connection
+				connection.close(done -> {
+					if (done.failed()) {
+						throw new RuntimeException(done.cause());
+					}
+				});
+
+				future.complete();
+			});
+		});
+
+	}
 }

@@ -22,6 +22,11 @@ public class ApiCall extends AbstractVerticle {
     public static Logger logger;
 
     public static HttpClient httpClient;
+    public static Vertx mainVertx;
+
+    private void setVertx(Vertx vertx) {
+        mainVertx = vertx;
+    }
 
     @Override
     public void start(Future<Void> startFuture) throws Exception {
@@ -36,6 +41,8 @@ public class ApiCall extends AbstractVerticle {
 
         //Initialize the logger
         initLogger();
+
+        setVertx(vertx);
 
         HttpClientOptions clientOptions = new HttpClientOptions();
         clientOptions.setMaxPoolSize(500);
@@ -52,27 +59,32 @@ public class ApiCall extends AbstractVerticle {
             logger.info("Inside GET call");
             HttpServerRequest serverRequest = routingContext.request();
 
+            logger.info("3 Time = "+System.currentTimeMillis());
             Future<JsonObject> apiResponse = ApiHelper.getApiResponse(httpClient, logger);
 
-            Future<JsonObject> usResponse = ApiHelper.getApiResponse(httpClient, logger);
+//            Future<JsonObject> usResponse = ApiHelper.getApiResponse(httpClient, logger);
 
-
-            CompositeFuture.all(apiResponse, usResponse).setHandler(new Handler<AsyncResult<CompositeFuture>>() {
-                @Override
-                public void handle(AsyncResult<CompositeFuture> compositeFutureAsyncResult) {
-                    if (compositeFutureAsyncResult.failed()) {
-                        logger.error("Compite Future failed cause = "+compositeFutureAsyncResult.cause());
-                        serverRequest.response().end(createResponse("FAILURE", null));
-                        return;
-                    }
-                    CompositeFuture compositeFuture = compositeFutureAsyncResult.result();
-                    JsonObject firstResp = compositeFuture.resultAt(0);
-                    JsonObject secondResp = compositeFuture.resultAt(1);
-                    logger.info("firstResp = "+firstResp.toString()+"\nsecondResp = "+secondResp.toString());
-                    firstResp.mergeIn(secondResp);
-                    serverRequest.response().end(createResponse("SUCCESS", firstResp));
-                }
+            apiResponse.setHandler(handler -> {
+                logger.info("4 Time = "+System.currentTimeMillis());
+                serverRequest.response().end(createResponse("SUCCESS", handler.result()));
             });
+
+
+//            CompositeFuture.all(apiResponse, usResponse).setHandler(new Handler<AsyncResult<CompositeFuture>>() {
+//                @Override
+//                public void handle(AsyncResult<CompositeFuture> compositeFutureAsyncResult) {
+//                    if (compositeFutureAsyncResult.failed()) {
+//                        logger.error("Compite Future failed cause = "+compositeFutureAsyncResult.cause());
+//                        serverRequest.response().end(createResponse("FAILURE", null));
+//                        return;
+//                    }
+//                    JsonObject firstResp = apiResponse.result();
+//                    JsonObject secondResp = usResponse.result();
+//                    logger.info("firstResp = "+firstResp.toString()+"\nsecondResp = "+secondResp.toString());
+//                    firstResp.mergeIn(secondResp);
+//                    serverRequest.response().end(createResponse("SUCCESS", firstResp));
+//                }
+//            });
             logger.info("Done with GET");
         });
 

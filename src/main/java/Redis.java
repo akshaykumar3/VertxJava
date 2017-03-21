@@ -69,6 +69,7 @@ public class Redis extends AbstractVerticle {
             String key = request.params().get("key");
             logger.info("GET: got key = "+key);
 
+
             redisClient.get(key, res -> {
                 if(res.succeeded()) {
                     logger.info("Redis value = "+res.result());
